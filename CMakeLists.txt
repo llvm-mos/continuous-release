@@ -1,18 +1,24 @@
 # Clone and build the llvm-mos compiler, linker and assembler
 cmake_minimum_required(VERSION 3.17)
 project(build-llvm-mos-compiler-dist
-    LANGUAGES ASM C CXX)
+    LANGUAGES C CXX)
 
 # Set constants
-set(LLVM_MOS_GIT_URL https://github.com/johnwbyrd/llvm-mos.git
+set(LLVM_MOS_GIT_URL https://github.com/llvm-mos/llvm-mos.git
     CACHE STRING "URL of git repository containing the llvm-mos compilers")
-set(LLVM_MOS_GIT_TAG master
+set(LLVM_MOS_GIT_TAG main
     CACHE STRING "Tag, branch or hash of git repository to pull")
 set(LLVM_MOS_CMAKE_CACHE_FILE_NAME LLVM-cache.cmake)
 set(LLVM_MOS_CMAKE_CACHE_FILE_PATH ${DOWNLOAD_DIR}/${LLVM_MOS_CMAKE_CACHE_FILE_NAME})
 set(LLVM_MOS_CMAKE_CACHE_URL 
     https://raw.githubusercontent.com/llvm-mos/llvm-mos-sdk/main/cmake/llvm-mos/${LLVM_MOS_CMAKE_CACHE_FILE_NAME}
     CACHE STRING "URL of CMake cache file")
+set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease 
+    CACHE STRING "Flags to pass to Github CLI's release create command")
+set(CMAKE_BUILD_TYPE Release
+    CACHE STRING "Build type for compilers")
+set(LLVM_MOS_DISABLE_TEST_SUITE YES 
+    CACHE BOOL "Should this build skip the test suite for the llvm-mos compilers?")
 set(LLVM_MOS_INSTALL_SUBPATH install)
 
 include(CMakeDetermineCXXCompiler)
@@ -27,7 +33,7 @@ endif()
 set(DO_NOTHING ${CMAKE_COMMAND} --version)
 file(DOWNLOAD LLVM_MOS_CMAKE_CACHE_URL)
 include(ExternalProject)
-ExternalProject_Add( llvm-mos-download-cache
+ExternalProject_Add( download-cache
     URL ${LLVM_MOS_CMAKE_CACHE_URL}
     DOWNLOAD_NAME ${LLVM_MOS_CMAKE_CACHE_FILE_NAME}
     DOWNLOAD_NO_EXTRACT YES 
@@ -35,25 +41,30 @@ ExternalProject_Add( llvm-mos-download-cache
     BUILD_COMMAND ${DO_NOTHING}
     INSTALL_COMMAND ${DO_NOTHING}
 )
-ExternalProject_Get_Property(llvm-mos-download-cache DOWNLOAD_DIR)
+ExternalProject_Get_Property(download-cache DOWNLOAD_DIR)
 set(LLVM_MOS_CMAKE_CACHE_FILE ${DOWNLOAD_DIR}/LLVM-cache.cmake)
 
+set(LLVM_MOS_CMAKE_ARGS         
+    -C ${LLVM_MOS_CMAKE_CACHE_FILE}
+    <SOURCE_DIR>/llvm
+    -DCMAKE_C_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
+    -DCMAKE_CXX_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
+    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE})
+set(LLVM_MOS_CMAKE_CACHE_ARGS
+    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE})
+
 # Actually build the llvm-mos compiler
-ExternalProject_Add( llvm-mos
+ExternalProject_Add( build
     GIT_REPOSITORY ${LLVM_MOS_GIT_URL}
     GIT_TAG ${LLVM_MOS_GIT_TAG}
     GIT_PROGRESS 1
-    CMAKE_ARGS
-        -C ${LLVM_MOS_CMAKE_CACHE_FILE}
-        <SOURCE_DIR>/llvm
-        -DCMAKE_C_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
-        -DCMAKE_CXX_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
-    CMAKE_CACHE_ARGS 
+    CMAKE_ARGS ${LLVM_MOS_CMAKE_ARGS}
+    CMAKE_CACHE_ARGS ${LLVM_MOS_CMAKE_CACHE_ARGS} 
         -DCMAKE_INSTALL_PREFIX:STRING=<INSTALL_DIR>/${LLVM_MOS_INSTALL_SUBPATH}
-        -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-    TEST_COMMAND cmake --build . --target distribution
-    PATCH_COMMAND
-    TEST_BEFORE_INSTALL 1
+    INSTALL_COMMAND cmake --build . --target install distribution
+    TEST_COMMAND cmake --build . --target check-all
+    TEST_AFTER_INSTALL YES
+    TEST_EXCLUDE_FROM_MAIN ${LLVM_MOS_DISABLE_TEST_SUITE}
     USES_TERMINAL_DOWNLOAD 1
     USES_TERMINAL_UPDATE 1
     USES_TERMINAL_CONFIGURE 1
@@ -61,24 +72,47 @@ ExternalProject_Add( llvm-mos
     USES_TERMINAL_INSTALL 1
     USES_TERMINAL_TEST 1
 )
-ExternalProject_Get_Property(llvm-mos INSTALL_DIR)
-add_dependencies(llvm-mos llvm-mos-download-cache)
+ExternalProject_Get_Property(build INSTALL_DIR)
+add_dependencies(build download-cache)
 
 string(TOLOWER ${CMAKE_SYSTEM_NAME} LLVM_MOS_PLATFORM_NAME)
 set(LLVM_MOS_INSTALL_DIR ${INSTALL_DIR}/${LLVM_MOS_INSTALL_SUBPATH})
+set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_GIT_TAG})
 set(LLVM_MOS_PACKAGE_PATH  
-    ${LLVM_MOS_INSTALL_DIR}/../llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_GIT_TAG}.zip)
+    ${LLVM_MOS_INSTALL_DIR}/../${LLVM_MOS_RELEASE_NAME}.zip)
 
-add_custom_target(llvm-mos-package
+find_program(LLVM_MOS_ZIP zip REQUIRED)
+add_custom_target(package
     ALL
     COMMAND 
-        zip -FSr -9 -v
+        ${LLVM_MOS_ZIP} -FSr -9 -v
             ${LLVM_MOS_PACKAGE_PATH}
             ./
     WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}
     BYPRODUCTS ${LLVM_MOS_PACKAGE_PATH}
     COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}
-    DEPENDS llvm-mos
+    DEPENDS build
 )
-    
-add_dependencies(llvm-mos-package llvm-mos)
+
+find_program(LLVM_MOS_GIT git REQUIRED)
+find_program(LLVM_MOS_GH gh REQUIRED)
+execute_process(
+    COMMAND
+        ${LLVM_MOS_GIT} rev-parse HEAD
+    OUTPUT_VARIABLE
+        LLVM_MOS_GIT_HASH
+)
+
+add_custom_target(ship
+# Ignore the gh release command if it fails by throwing in a git command
+# that always succeeds.
+    COMMAND
+        ${LLVM_MOS_GH} release delete ${LLVM_MOS_RELEASE_NAME} -y ||
+           echo "No previous release of ${LLVM_MOS_RELEASE_NAME} to delete" 
+    COMMAND
+        ${LLVM_MOS_GH} release create 
+            ${LLVM_MOS_RELEASE_NAME} 
+            ${LLVM_MOS_GH_RELEASE_CREATE_FLAGS}
+            ${LLVM_MOS_PACKAGE_PATH} 
+    DEPENDS package
+)
