@@ -21,6 +21,7 @@ set(LLVM_MOS_DISABLE_TEST_SUITE YES
     CACHE BOOL "Should this build skip the test suite for the llvm-mos compilers?")
 set(LLVM_MOS_INSTALL_SUBPATH install)
 
+# Find whatever local host compiler we have
 include(CMakeDetermineCXXCompiler)
 
 # Make adjustments for MSVC
@@ -37,21 +38,25 @@ ExternalProject_Add( download-cache
     URL ${LLVM_MOS_CMAKE_CACHE_URL}
     DOWNLOAD_NAME ${LLVM_MOS_CMAKE_CACHE_FILE_NAME}
     DOWNLOAD_NO_EXTRACT YES 
+    UPDATE_COMMAND ${DO_NOTHING}
     CONFIGURE_COMMAND ${DO_NOTHING}
     BUILD_COMMAND ${DO_NOTHING}
     INSTALL_COMMAND ${DO_NOTHING}
 )
+
 ExternalProject_Get_Property(download-cache DOWNLOAD_DIR)
-set(LLVM_MOS_CMAKE_CACHE_FILE ${DOWNLOAD_DIR}/LLVM-cache.cmake)
+set(LLVM_MOS_CMAKE_CACHE_FILE ${DOWNLOAD_DIR}/${LLVM_MOS_CMAKE_CACHE_FILE_NAME})
 
 set(LLVM_MOS_CMAKE_ARGS         
     -C ${LLVM_MOS_CMAKE_CACHE_FILE}
     <SOURCE_DIR>/llvm
     -DCMAKE_C_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
     -DCMAKE_CXX_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
-    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE})
+    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+    )
 set(LLVM_MOS_CMAKE_CACHE_ARGS
-    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE})
+    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+    )
 
 # Actually build the llvm-mos compiler
 ExternalProject_Add( build
@@ -61,7 +66,8 @@ ExternalProject_Add( build
     CMAKE_ARGS ${LLVM_MOS_CMAKE_ARGS}
     CMAKE_CACHE_ARGS ${LLVM_MOS_CMAKE_CACHE_ARGS} 
         -DCMAKE_INSTALL_PREFIX:STRING=<INSTALL_DIR>/${LLVM_MOS_INSTALL_SUBPATH}
-    INSTALL_COMMAND cmake --build . --target install distribution
+    INSTALL_COMMAND cmake --build . --target distribution
+    COMMAND cmake --build . --target install
     TEST_COMMAND cmake --build . --target check-all
     TEST_AFTER_INSTALL YES
     TEST_EXCLUDE_FROM_MAIN ${LLVM_MOS_DISABLE_TEST_SUITE}
@@ -83,7 +89,6 @@ set(LLVM_MOS_PACKAGE_PATH
 
 find_program(LLVM_MOS_ZIP zip REQUIRED)
 add_custom_target(package
-    ALL
     COMMAND 
         ${LLVM_MOS_ZIP} -FSr -9 -v
             ${LLVM_MOS_PACKAGE_PATH}
