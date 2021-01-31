@@ -7,7 +7,7 @@ llvm-mos project.
 Dependencies
 ---
 
-- [CMake](https://www.cmake.org) 3.17 or later
+- [CMake](https://www.cmake.org) 3.10 or later
 - [Github CLI](https://cli.github.com/)
 - [zip](https://zlib.net/)
 - [git](https://www.git-scm.com)

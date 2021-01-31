@@ -1,5 +1,5 @@
 # Clone and build the llvm-mos compiler, linker and assembler
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.10)
 project(build-llvm-mos-compiler-dist
     LANGUAGES C CXX)
 
@@ -32,7 +32,7 @@ endif()
 
 # Convince cmake that we really just want to download a file in this step
 set(DO_NOTHING ${CMAKE_COMMAND} --version)
-file(DOWNLOAD LLVM_MOS_CMAKE_CACHE_URL)
+
 include(ExternalProject)
 ExternalProject_Add( download-cache
     URL ${LLVM_MOS_CMAKE_CACHE_URL}
