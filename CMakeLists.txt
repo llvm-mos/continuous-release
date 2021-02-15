@@ -8,6 +8,8 @@ set(LLVM_MOS_GIT_URL https://github.com/llvm-mos/llvm-mos.git
     CACHE STRING "URL of git repository containing the llvm-mos compilers")
 set(LLVM_MOS_GIT_TAG main
     CACHE STRING "Tag, branch or hash of git repository to pull")
+set(LLVM_MOS_RELEASE_SLUG ${LLVM_MOS_GIT_TAG}
+    CACHE STRING "The short, human-readable, no-slashes name of the release to create (i.e. feature-do-linking)")
 set(LLVM_MOS_CMAKE_CACHE_FILE_NAME LLVM-cache.cmake)
 set(LLVM_MOS_CMAKE_CACHE_FILE_PATH ${DOWNLOAD_DIR}/${LLVM_MOS_CMAKE_CACHE_FILE_NAME})
 set(LLVM_MOS_CMAKE_CACHE_URL 
@@ -83,7 +85,7 @@ add_dependencies(build download-cache)
 
 string(TOLOWER ${CMAKE_SYSTEM_NAME} LLVM_MOS_PLATFORM_NAME)
 set(LLVM_MOS_INSTALL_DIR ${INSTALL_DIR}/${LLVM_MOS_INSTALL_SUBPATH})
-set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_GIT_TAG})
+set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_RELEASE_SLUG})
 set(LLVM_MOS_PACKAGE_PATH  
     ${LLVM_MOS_INSTALL_DIR}/../${LLVM_MOS_RELEASE_NAME}.zip)
 
