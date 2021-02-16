@@ -59,9 +59,10 @@ set(LLVM_MOS_CMAKE_ARGS
     )
 # Use LLVM compiler on Windows
 if (WIN32)
-    list(APPEND LLVM_MOS_CMAKE_ARGS "-T llvm")
+    list(APPEND LLVM_MOS_CMAKE_ARGS "-Tllvm")
     list(REMOVE_DUPLICATES LLVM_MOS_CMAKE_ARGS)
 endif()
+
 set(LLVM_MOS_CMAKE_CACHE_ARGS "")
 
 # Actually build the llvm-mos compiler
