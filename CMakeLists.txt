@@ -57,9 +57,10 @@ set(LLVM_MOS_CMAKE_ARGS
     -DCMAKE_CXX_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     )
-# Use LLVM compiler on Windows
+
+# Any Windows specific flags go here
 if (WIN32)
-    list(APPEND LLVM_MOS_CMAKE_ARGS "-Tllvm")
+    list(APPEND LLVM_MOS_CMAKE_ARGS "")
     list(REMOVE_DUPLICATES LLVM_MOS_CMAKE_ARGS)
 endif()
 
