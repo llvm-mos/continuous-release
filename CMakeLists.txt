@@ -30,6 +30,7 @@ include(CMakeDetermineCXXCompiler)
 set(LLVM_MOS_C_FLAGS "")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     list(APPEND LLVM_MOS_C_FLAGS /FS)
+    list(REMOVE_DUPLICATES LLVM_MOS_C_FLAGS)
 endif()
 
 # Convince cmake that we really just want to download a file in this step
@@ -56,6 +57,11 @@ set(LLVM_MOS_CMAKE_ARGS
     -DCMAKE_CXX_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     )
+# Use LLVM compiler on Windows
+if (WIN32)
+    list(APPEND LLVM_MOS_CMAKE_ARGS "-T llvm")
+    list(REMOVE_DUPLICATES LLVM_MOS_CMAKE_ARGS)
+endif()
 set(LLVM_MOS_CMAKE_CACHE_ARGS "")
 
 # Actually build the llvm-mos compiler
