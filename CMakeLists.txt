@@ -56,9 +56,7 @@ set(LLVM_MOS_CMAKE_ARGS
     -DCMAKE_CXX_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     )
-set(LLVM_MOS_CMAKE_CACHE_ARGS
-    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-    )
+set(LLVM_MOS_CMAKE_CACHE_ARGS "")
 
 # Actually build the llvm-mos compiler
 ExternalProject_Add( build
