@@ -19,7 +19,7 @@ set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease
     CACHE STRING "Flags to pass to Github CLI's release create command")
 set(CMAKE_BUILD_TYPE Release
     CACHE STRING "Build type for compilers")
-set(LLVM_MOS_DISABLE_TEST_SUITE YES 
+set(LLVM_MOS_DISABLE_TEST_SUITE No 
     CACHE BOOL "Should this build skip the test suite for the llvm-mos compilers?")
 set(LLVM_MOS_INSTALL_SUBPATH install)
 
