@@ -19,9 +19,13 @@ set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease
     CACHE STRING "Flags to pass to Github CLI's release create command")
 set(CMAKE_BUILD_TYPE Release
     CACHE STRING "Build type for compilers")
-set(LLVM_MOS_DISABLE_TEST_SUITE No 
-    CACHE BOOL "Should this build skip the test suite for the llvm-mos compilers?")
+set(LLVM_MOS_TEST_SUITE_ENABLED Yes 
+    CACHE BOOL "Should this build run the test suite for the llvm-mos compilers?")
+set(LLVM_MOS_TEST_SUITE_TARGET check-llvm 
+    CACHE STRING "The target to cmake in order to test")
 set(LLVM_MOS_INSTALL_SUBPATH install)
+
+set(LLVM_MOS_TEST_SUITE_DISABLED (NOT ${LLVM_MOS_TEST_SUITE_ENABLED}))
 
 # Find whatever local host compiler we have
 include(CMakeDetermineCXXCompiler)
@@ -76,9 +80,9 @@ ExternalProject_Add( build
         -DCMAKE_INSTALL_PREFIX:STRING=<INSTALL_DIR>/${LLVM_MOS_INSTALL_SUBPATH}
     INSTALL_COMMAND cmake --build . --target distribution
     COMMAND cmake --build . --target install
-    TEST_COMMAND cmake --build . --target check-all
+    TEST_COMMAND cmake --build . --target ${LLVM_MOS_TEST_SUITE_TARGET}
     TEST_AFTER_INSTALL YES
-    TEST_EXCLUDE_FROM_MAIN ${LLVM_MOS_DISABLE_TEST_SUITE}
+    TEST_EXCLUDE_FROM_MAIN ${LLVM_MOS_TEST_SUITE_DISABLED}
     USES_TERMINAL_DOWNLOAD 1
     USES_TERMINAL_UPDATE 1
     USES_TERMINAL_CONFIGURE 1

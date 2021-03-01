@@ -1,8 +1,17 @@
-build-compiler-dist
+continuous-release
 ===
 
 This project downloads, builds, packages, and releases distributions of the
 llvm-mos project.
+
+It does so by priming the CMake cache with a cmake file
+downloaded from the llvm-mos-sdk project, and then downloading and building 
+llvm-mos using CMake's ExternalProject functionality.  After building 
+a distribution and optionally testing, it pushes the resultant build to 
+Github as a named and tagged release.
+
+User-configurable flags are at the beginning of CMakeLists.txt, and they
+should be both self-explanatory and overrideable.
 
 Dependencies
 ---
@@ -18,10 +27,10 @@ Dependencies
 Targets
 ---
 
-Name           | Description
----            | ---
+Name | Description
+--- | ---
 build | Download and build llvm-mos
 download-cache | Downloads a CMake cache file for priming the LLVM build
-package        | Zip up the built compiler suite
-ship           | Deploy the package on Github as per GITHUB_TOKEN and GH_REPO
+package | Zip up the built compiler suite
+ship | Deploy the package on Github as per GITHUB_TOKEN and GH_REPO
 
