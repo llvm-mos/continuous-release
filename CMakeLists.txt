@@ -1,5 +1,6 @@
 # Clone and build the llvm-mos compiler, linker and assembler
-cmake_minimum_required(VERSION 3.10)
+# cmake 3.15 permits us to build multiple targets in one go
+cmake_minimum_required(VERSION 3.15)
 project(build-llvm-mos-compiler-dist
     LANGUAGES C CXX)
 
@@ -10,14 +11,11 @@ set(LLVM_MOS_GIT_TAG main
     CACHE STRING "Tag, branch or hash of git repository to pull")
 set(LLVM_MOS_RELEASE_SLUG ${LLVM_MOS_GIT_TAG}
     CACHE STRING "The short, human-readable, no-slashes name of the release to create (i.e. feature-do-linking)")
-set(LLVM_MOS_CMAKE_CACHE_FILE_NAME LLVM-cache.cmake)
-set(LLVM_MOS_CMAKE_CACHE_FILE_PATH ${DOWNLOAD_DIR}/${LLVM_MOS_CMAKE_CACHE_FILE_NAME})
-set(LLVM_MOS_CMAKE_CACHE_URL 
-    https://raw.githubusercontent.com/llvm-mos/llvm-mos-sdk/main/cmake/llvm-mos/${LLVM_MOS_CMAKE_CACHE_FILE_NAME}
-    CACHE STRING "URL of CMake cache file")
+set(LLVM_MOS_CMAKE_CACHE_FILE clang/cmake/caches/MOS.cmake
+    CACHE STRING "Path from root of project to the MOS cmake cache file")
 set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease 
     CACHE STRING "Flags to pass to Github CLI's release create command")
-set(CMAKE_BUILD_TYPE Release
+set(CMAKE_BUILD_TYPE MinSizeRel
     CACHE STRING "Build type for compilers")
 set(LLVM_MOS_TEST_SUITE_ENABLED Yes 
     CACHE BOOL "Should this build run the test suite for the llvm-mos compilers?")
@@ -41,25 +39,12 @@ endif()
 set(DO_NOTHING ${CMAKE_COMMAND} --version)
 
 include(ExternalProject)
-ExternalProject_Add( download-cache
-    URL ${LLVM_MOS_CMAKE_CACHE_URL}
-    DOWNLOAD_NAME ${LLVM_MOS_CMAKE_CACHE_FILE_NAME}
-    DOWNLOAD_NO_EXTRACT YES 
-    UPDATE_COMMAND ${DO_NOTHING}
-    CONFIGURE_COMMAND ${DO_NOTHING}
-    BUILD_COMMAND ${DO_NOTHING}
-    INSTALL_COMMAND ${DO_NOTHING}
-)
-
-ExternalProject_Get_Property(download-cache DOWNLOAD_DIR)
-set(LLVM_MOS_CMAKE_CACHE_FILE ${DOWNLOAD_DIR}/${LLVM_MOS_CMAKE_CACHE_FILE_NAME})
 
 set(LLVM_MOS_CMAKE_ARGS         
-    -C ${LLVM_MOS_CMAKE_CACHE_FILE}
+    -C <SOURCE_DIR>/${LLVM_MOS_CMAKE_CACHE_FILE}
     <SOURCE_DIR>/llvm
     -DCMAKE_C_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
     -DCMAKE_CXX_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
-    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     )
 
 # Any Windows specific flags go here
@@ -78,7 +63,13 @@ ExternalProject_Add( build
     CMAKE_ARGS ${LLVM_MOS_CMAKE_ARGS}
     CMAKE_CACHE_ARGS ${LLVM_MOS_CMAKE_CACHE_ARGS} 
         -DCMAKE_INSTALL_PREFIX:STRING=<INSTALL_DIR>/${LLVM_MOS_INSTALL_SUBPATH}
-    INSTALL_COMMAND cmake --build . --target distribution
+    INSTALL_COMMAND cmake 
+        --build . 
+        --target
+            check-llvm
+            check-clang
+            check-lld
+            distribution
     COMMAND cmake --build . --target install
     TEST_COMMAND cmake --build . --target ${LLVM_MOS_TEST_SUITE_TARGET}
     TEST_AFTER_INSTALL YES
@@ -91,7 +82,6 @@ ExternalProject_Add( build
     USES_TERMINAL_TEST 1
 )
 ExternalProject_Get_Property(build INSTALL_DIR)
-add_dependencies(build download-cache)
 
 string(TOLOWER ${CMAKE_SYSTEM_NAME} LLVM_MOS_PLATFORM_NAME)
 set(LLVM_MOS_INSTALL_DIR ${INSTALL_DIR}/${LLVM_MOS_INSTALL_SUBPATH})
