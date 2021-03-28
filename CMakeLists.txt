@@ -17,7 +17,7 @@ set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease
     CACHE STRING "Flags to pass to Github CLI's release create command")
 set(CMAKE_BUILD_TYPE MinSizeRel
     CACHE STRING "Build type for compilers")
-set(LLVM_MOS_TEST_SUITE_ENABLED Yes 
+set(LLVM_MOS_TEST_SUITE_ENABLED No
     CACHE BOOL "Should this build run the test suite for the llvm-mos compilers?")
 set(LLVM_MOS_TEST_SUITE_TARGET check-llvm 
     CACHE STRING "The target to cmake in order to test")
@@ -63,13 +63,7 @@ ExternalProject_Add( build
     CMAKE_ARGS ${LLVM_MOS_CMAKE_ARGS}
     CMAKE_CACHE_ARGS ${LLVM_MOS_CMAKE_CACHE_ARGS} 
         -DCMAKE_INSTALL_PREFIX:STRING=<INSTALL_DIR>/${LLVM_MOS_INSTALL_SUBPATH}
-    INSTALL_COMMAND cmake 
-        --build . 
-        --target
-            check-llvm
-            check-clang
-            check-lld
-            distribution
+    INSTALL_COMMAND cmake -E echo "Skipping install step"
     COMMAND cmake --build . --target install
     TEST_COMMAND cmake --build . --target ${LLVM_MOS_TEST_SUITE_TARGET}
     TEST_AFTER_INSTALL YES
