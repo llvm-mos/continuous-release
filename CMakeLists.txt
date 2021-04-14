@@ -111,8 +111,13 @@ add_custom_target(ship
         ${LLVM_MOS_GH} release delete ${LLVM_MOS_RELEASE_NAME} -y ||
            echo "No previous release of ${LLVM_MOS_RELEASE_NAME} to delete" 
     COMMAND
+        git --no-pager log -10 --no-color > git.log
+    COMMAND
         ${LLVM_MOS_GH} release create 
             ${LLVM_MOS_RELEASE_NAME} 
+            --notes-file git.log
+            --title ${LLVM_MOS_RELEASE_NAME}
+            --target ${LLVM_MOS_GIT_TAG}
             ${LLVM_MOS_GH_RELEASE_CREATE_FLAGS}
             ${LLVM_MOS_PACKAGE_PATH} 
     DEPENDS package
