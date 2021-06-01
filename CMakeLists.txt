@@ -112,7 +112,7 @@ add_custom_target(ship
            echo "No previous release ${LLVM_MOS_RELEASE_NAME} to delete" 
     COMMAND
         git push --delete origin ${LLVM_MOS_RELEASE_NAME} ||
-            echo "No previous branch ${LLVM_MOS_RELEASE_NAME} to delete"    
+            echo "No previous tag ${LLVM_MOS_RELEASE_NAME} to delete"    
     COMMAND
         git 
             --no-pager 
