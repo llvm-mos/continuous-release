@@ -88,7 +88,7 @@ add_custom_target(package
     COMMAND 
         ${LLVM_MOS_ZIP} -FSr -9 -v
             ${LLVM_MOS_PACKAGE_PATH}
-            ./
+            bin/
     WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}
     BYPRODUCTS ${LLVM_MOS_PACKAGE_PATH}
     COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}

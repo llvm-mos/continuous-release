@@ -30,7 +30,6 @@ Targets
 Name | Description
 --- | ---
 build | Download and build llvm-mos
-download-cache | Downloads a CMake cache file for priming the LLVM build
 package | Zip up the built compiler suite
 ship | Deploy the package on Github as per GITHUB_TOKEN and GH_REPO
 
