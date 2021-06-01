@@ -109,9 +109,17 @@ add_custom_target(ship
 # that always succeeds.
     COMMAND
         ${LLVM_MOS_GH} release delete ${LLVM_MOS_RELEASE_NAME} -y ||
-           echo "No previous release of ${LLVM_MOS_RELEASE_NAME} to delete" 
+           echo "No previous release ${LLVM_MOS_RELEASE_NAME} to delete" 
     COMMAND
-        git --no-pager log -10 --no-color > git.log
+        git push --delete origin ${LLVM_MOS_RELEASE_NAME} ||
+            echo "No previous branch ${LLVM_MOS_RELEASE_NAME} to delete"    
+    COMMAND
+        git 
+            --no-pager 
+            log 
+            -1
+            --pretty="format:Date: %aD%nAuthor: %aN%nSubject: %s%n"            
+            > git.log
     COMMAND
         ${LLVM_MOS_GH} release create 
             ${LLVM_MOS_RELEASE_NAME} 
