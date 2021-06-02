@@ -35,9 +35,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     list(REMOVE_DUPLICATES LLVM_MOS_C_FLAGS)
 endif()
 
-# Convince cmake that we really just want to download a file in this step
-set(DO_NOTHING ${CMAKE_COMMAND} --version)
-
 include(ExternalProject)
 
 set(LLVM_MOS_CMAKE_ARGS         
@@ -101,12 +98,6 @@ add_custom_target(package
 
 find_program(LLVM_MOS_GIT git REQUIRED)
 find_program(LLVM_MOS_GH gh REQUIRED)
-execute_process(
-    COMMAND
-        ${LLVM_MOS_GIT} rev-parse HEAD
-    OUTPUT_VARIABLE
-        LLVM_MOS_GIT_HASH
-)
 
 add_custom_target(ship
 # Ignore the gh release command if it fails by throwing in a git command
@@ -120,12 +111,7 @@ add_custom_target(ship
         git push --delete origin ${LLVM_MOS_RELEASE_NAME} ||
             echo "No previous tag ${LLVM_MOS_RELEASE_NAME} to delete"
     COMMAND
-        git 
-            --no-pager 
-            log 
-            -1
-            --pretty="format:Date: %aD%n Author:%aN %nSubject:%s%n"            
-            > git.log
+        echo "This is an automated build of the ${LLVM_MOS_RELEASE_SLUG} branch for ${CMAKE_SYSTEM_NAME}." > git.log
     COMMAND
         ${LLVM_MOS_GH} release create 
             ${LLVM_MOS_RELEASE_NAME} 
