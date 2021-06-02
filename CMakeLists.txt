@@ -124,7 +124,7 @@ add_custom_target(ship
             --no-pager 
             log 
             -1
-            --pretty="format:Date:%aD%nAuthor:%aN%nSubject:%s%n"            
+            --pretty="format:Date: %aD%n Author:%aN %nSubject:%s%n"            
             > git.log
     COMMAND
         ${LLVM_MOS_GH} release create 
