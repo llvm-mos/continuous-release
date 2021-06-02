@@ -55,11 +55,12 @@ endif()
 
 set(LLVM_MOS_CMAKE_CACHE_ARGS "")
 
-# Actually build the llvm-mos compiler
+# Download and build the llvm-mos compiler
 ExternalProject_Add( build
     GIT_REPOSITORY ${LLVM_MOS_GIT_URL}
     GIT_TAG ${LLVM_MOS_GIT_TAG}
     GIT_PROGRESS 1
+    GIT_SHALLOW 0
     CMAKE_ARGS ${LLVM_MOS_CMAKE_ARGS}
     CMAKE_CACHE_ARGS ${LLVM_MOS_CMAKE_CACHE_ARGS} 
         -DCMAKE_INSTALL_PREFIX:STRING=<INSTALL_DIR>/${LLVM_MOS_INSTALL_SUBPATH}
@@ -76,9 +77,12 @@ ExternalProject_Add( build
     USES_TERMINAL_TEST 1
 )
 ExternalProject_Get_Property(build INSTALL_DIR)
+ExternalProject_Get_Property(build SOURCE_DIR)
 
 string(TOLOWER ${CMAKE_SYSTEM_NAME} LLVM_MOS_PLATFORM_NAME)
+
 set(LLVM_MOS_INSTALL_DIR ${INSTALL_DIR}/${LLVM_MOS_INSTALL_SUBPATH})
+set(LLVM_MOS_SOURCE_DIR ${SOURCE_DIR})
 set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_RELEASE_SLUG})
 set(LLVM_MOS_PACKAGE_PATH  
     ${LLVM_MOS_INSTALL_DIR}/../${LLVM_MOS_RELEASE_NAME}.zip)
@@ -88,8 +92,8 @@ add_custom_target(package
     COMMAND 
         ${LLVM_MOS_ZIP} -FSr -9 -v
             ${LLVM_MOS_PACKAGE_PATH}
-            bin/
-    WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}
+            ./
+    WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}/bin
     BYPRODUCTS ${LLVM_MOS_PACKAGE_PATH}
     COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}
     DEPENDS build
@@ -107,18 +111,20 @@ execute_process(
 add_custom_target(ship
 # Ignore the gh release command if it fails by throwing in a git command
 # that always succeeds.
+    COMMAND 
+        cd
     COMMAND
         ${LLVM_MOS_GH} release delete ${LLVM_MOS_RELEASE_NAME} -y ||
            echo "No previous release ${LLVM_MOS_RELEASE_NAME} to delete" 
     COMMAND
         git push --delete origin ${LLVM_MOS_RELEASE_NAME} ||
-            echo "No previous tag ${LLVM_MOS_RELEASE_NAME} to delete"    
+            echo "No previous tag ${LLVM_MOS_RELEASE_NAME} to delete"
     COMMAND
         git 
             --no-pager 
             log 
             -1
-            --pretty="format:Date: %aD%nAuthor: %aN%nSubject: %s%n"            
+            --pretty="format:Date:%aD%nAuthor:%aN%nSubject:%s%n"            
             > git.log
     COMMAND
         ${LLVM_MOS_GH} release create 
@@ -129,4 +135,6 @@ add_custom_target(ship
             ${LLVM_MOS_GH_RELEASE_CREATE_FLAGS}
             ${LLVM_MOS_PACKAGE_PATH} 
     DEPENDS package
+    WORKING_DIRECTORY ${LLVM_MOS_SOURCE_DIR}
+    COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}
 )
