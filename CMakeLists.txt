@@ -5,18 +5,26 @@ project(build-llvm-mos-compiler-dist
     LANGUAGES C CXX)
 
 # Set constants
-set(LLVM_MOS_GIT_URL https://github.com/llvm-mos/llvm-mos.git
+if(NOT DEFINED LLVM_MOS_GIT_URL)
+    set(LLVM_MOS_GIT_URL https://github.com/llvm-mos/llvm-mos.git
     CACHE STRING "URL of git repository containing the llvm-mos compilers")
-set(LLVM_MOS_GIT_TAG main
+endif()
+if(NOT DEFINED LLVM_MOS_GIT_TAG)
+    set(LLVM_MOS_GIT_TAG main
     CACHE STRING "Tag, branch or hash of git repository to pull")
-set(LLVM_MOS_RELEASE_SLUG ${LLVM_MOS_GIT_TAG}
-    CACHE STRING "The short, human-readable, no-slashes name of the release to create (i.e. feature-do-linking)")
+endif()
+if(NOT DEFINED LLVM_MOS_GIT_RELEASE_SLUG)
+    set(LLVM_MOS_RELEASE_SLUG ${LLVM_MOS_GIT_TAG}
+        CACHE STRING "The short, human-readable, no-slashes name of the release to create (i.e. feature-do-linking)")
+endif()
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE MinSizeRel
+        CACHE STRING "Build type for compilers")
+endif()
 set(LLVM_MOS_CMAKE_CACHE_FILE clang/cmake/caches/MOS.cmake
     CACHE STRING "Path from root of project to the MOS cmake cache file")
 set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease 
     CACHE STRING "Flags to pass to Github CLI's release create command")
-set(CMAKE_BUILD_TYPE MinSizeRel
-    CACHE STRING "Build type for compilers")
 set(LLVM_MOS_TEST_SUITE_ENABLED No
     CACHE BOOL "Should this build run the test suite for the llvm-mos compilers?")
 set(LLVM_MOS_TEST_SUITE_TARGET check-llvm 
@@ -90,7 +98,7 @@ add_custom_target(package
         ${LLVM_MOS_ZIP} -FSr -9 -v
             ${LLVM_MOS_PACKAGE_PATH}
             ./
-    WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}/bin
+    WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}
     BYPRODUCTS ${LLVM_MOS_PACKAGE_PATH}
     COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}
     DEPENDS build
@@ -98,6 +106,8 @@ add_custom_target(package
 
 find_program(LLVM_MOS_GIT git REQUIRED)
 find_program(LLVM_MOS_GH gh REQUIRED)
+
+string(TIMESTAMP LLVM_MOS_DATE_TIME UTC)
 
 add_custom_target(ship
 # Ignore the gh release command if it fails by throwing in a git command
@@ -112,6 +122,12 @@ add_custom_target(ship
             echo "No previous tag ${LLVM_MOS_RELEASE_NAME} to delete"
     COMMAND
         echo "This is an automated build of the ${LLVM_MOS_RELEASE_SLUG} branch for ${CMAKE_SYSTEM_NAME}." > git.log
+        echo "" >> git.log 
+        echo "Repository: ${LLVM_MOS_GIT_URL}" >> git.log
+        echo "Branch: ${LLVM_MOS_RELEASE_SLUG}" >> git.log
+        echo "Tag: ${LLVM_MOS_GIT_TAG}" >> git.log
+        echo "Target: ${CMAKE_SYSTEM_NAME}" >> git.log
+        echo "Time: ${LLVM_MOS_DATE_TIME}" >> git.log
     COMMAND
         ${LLVM_MOS_GH} release create 
             ${LLVM_MOS_RELEASE_NAME} 
