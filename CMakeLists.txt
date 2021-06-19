@@ -122,11 +122,15 @@ add_custom_target(ship
             echo "No previous tag ${LLVM_MOS_RELEASE_NAME} to delete"
     COMMAND
         echo "This is an automated build of the ${LLVM_MOS_RELEASE_SLUG} branch for ${CMAKE_SYSTEM_NAME}." > git.log
-        echo "" >> git.log 
+    COMMAND
         echo "Repository: ${LLVM_MOS_GIT_URL}" >> git.log
+    COMMAND
         echo "Branch: ${LLVM_MOS_RELEASE_SLUG}" >> git.log
+    COMMAND
         echo "Tag: ${LLVM_MOS_GIT_TAG}" >> git.log
+    COMMAND
         echo "Target: ${CMAKE_SYSTEM_NAME}" >> git.log
+    COMMAND
         echo "Time: ${LLVM_MOS_DATE_TIME}" >> git.log
     COMMAND
         ${LLVM_MOS_GH} release create 
