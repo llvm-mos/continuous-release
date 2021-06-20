@@ -29,7 +29,7 @@ set(LLVM_MOS_TEST_SUITE_ENABLED No
     CACHE BOOL "Should this build run the test suite for the llvm-mos compilers?")
 set(LLVM_MOS_TEST_SUITE_TARGET check-llvm 
     CACHE STRING "The target to cmake in order to test")
-set(LLVM_MOS_INSTALL_SUBPATH install)
+set(LLVM_MOS_INSTALL_SUBPATH dist/llvm-mos)
 
 set(LLVM_MOS_TEST_SUITE_DISABLED (NOT ${LLVM_MOS_TEST_SUITE_ENABLED}))
 
@@ -90,7 +90,7 @@ set(LLVM_MOS_INSTALL_DIR ${INSTALL_DIR}/${LLVM_MOS_INSTALL_SUBPATH})
 set(LLVM_MOS_SOURCE_DIR ${SOURCE_DIR})
 set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_RELEASE_SLUG})
 set(LLVM_MOS_PACKAGE_PATH  
-    ${LLVM_MOS_INSTALL_DIR}/../${LLVM_MOS_RELEASE_NAME}.zip)
+    ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.zip)
 
 find_program(LLVM_MOS_ZIP zip REQUIRED)
 add_custom_target(package
@@ -98,7 +98,7 @@ add_custom_target(package
         ${LLVM_MOS_ZIP} -FSr -9 -v
             ${LLVM_MOS_PACKAGE_PATH}
             ./
-    WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}
+    WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}/..
     BYPRODUCTS ${LLVM_MOS_PACKAGE_PATH}
     COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}
     DEPENDS build
