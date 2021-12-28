@@ -92,10 +92,15 @@ set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_RELEASE_
 set(LLVM_MOS_PACKAGE_PATH  
     ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.zip)
 
+set(extra_zip_flags)
+if (NOT WIN32)
+    set(extra_zip_flags -y)
+endif()
+
 find_program(LLVM_MOS_ZIP zip REQUIRED)
 add_custom_target(package
     COMMAND 
-        ${LLVM_MOS_ZIP} -FSr -9 -v
+        ${LLVM_MOS_ZIP} -FSr ${extra_zip_flags} -9 -v
             ${LLVM_MOS_PACKAGE_PATH}
             ./
     WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}/..
