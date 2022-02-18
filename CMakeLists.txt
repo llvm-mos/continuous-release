@@ -23,11 +23,11 @@ if(NOT DEFINED CMAKE_BUILD_TYPE)
 endif()
 set(LLVM_MOS_CMAKE_CACHE_FILE clang/cmake/caches/MOS.cmake
     CACHE STRING "Path from root of project to the MOS cmake cache file")
-set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease 
+set(LLVM_MOS_GH_RELEASE_CREATE_FLAGS --prerelease
     CACHE STRING "Flags to pass to Github CLI's release create command")
 set(LLVM_MOS_TEST_SUITE_ENABLED No
     CACHE BOOL "Should this build run the test suite for the llvm-mos compilers?")
-set(LLVM_MOS_TEST_SUITE_TARGET check-llvm 
+set(LLVM_MOS_TEST_SUITE_TARGET check-llvm
     CACHE STRING "The target to cmake in order to test")
 set(LLVM_MOS_INSTALL_SUBPATH dist/llvm-mos)
 
@@ -45,7 +45,7 @@ endif()
 
 include(ExternalProject)
 
-set(LLVM_MOS_CMAKE_ARGS         
+set(LLVM_MOS_CMAKE_ARGS
     -C <SOURCE_DIR>/${LLVM_MOS_CMAKE_CACHE_FILE}
     <SOURCE_DIR>/llvm
     -DCMAKE_C_FLAGS:STRING=${LLVM_MOS_C_FLAGS}
@@ -67,7 +67,7 @@ ExternalProject_Add( build
     GIT_PROGRESS 1
     GIT_SHALLOW 0
     CMAKE_ARGS ${LLVM_MOS_CMAKE_ARGS}
-    CMAKE_CACHE_ARGS ${LLVM_MOS_CMAKE_CACHE_ARGS} 
+    CMAKE_CACHE_ARGS ${LLVM_MOS_CMAKE_CACHE_ARGS}
         -DCMAKE_INSTALL_PREFIX:STRING=<INSTALL_DIR>/${LLVM_MOS_INSTALL_SUBPATH}
     INSTALL_COMMAND cmake -E echo "Skipping install step"
     COMMAND cmake --build . --target install
@@ -89,20 +89,20 @@ string(TOLOWER ${CMAKE_SYSTEM_NAME} LLVM_MOS_PLATFORM_NAME)
 set(LLVM_MOS_INSTALL_DIR ${INSTALL_DIR}/${LLVM_MOS_INSTALL_SUBPATH})
 set(LLVM_MOS_SOURCE_DIR ${SOURCE_DIR})
 set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_RELEASE_SLUG})
-set(LLVM_MOS_PACKAGE_PATH  
-    ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.zip)
 
-set(extra_zip_flags)
-if (NOT WIN32)
-    set(extra_zip_flags -y)
+if (WIN32)
+  set(LLVM_MOS_PACKAGE_PATH
+      ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.zip)
+  find_program(LLVM_MOS_ZIP zip REQUIRED)
+  set(package_command ${LLVM_MOS_ZIP} -FSr -9 -v ${LLVM_MOS_PACKAGE_PATH} ./)
+else()
+  set(LLVM_MOS_PACKAGE_PATH
+      ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.tar.xz)
+  find_program(LLVM_MOS_TAR tar REQUIRED)
+  set(package_command ${LLVM_MOS_TAR} -cJvf ${LLVM_MOS_PACKAGE_PATH} ./)
 endif()
-
-find_program(LLVM_MOS_ZIP zip REQUIRED)
 add_custom_target(package
-    COMMAND 
-        ${LLVM_MOS_ZIP} -FSr ${extra_zip_flags} -9 -v
-            ${LLVM_MOS_PACKAGE_PATH}
-            ./
+    COMMAND ${package_command}
     WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}/..
     BYPRODUCTS ${LLVM_MOS_PACKAGE_PATH}
     COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}
@@ -117,11 +117,11 @@ string(TIMESTAMP LLVM_MOS_DATE_TIME UTC)
 add_custom_target(ship
 # Ignore the gh release command if it fails by throwing in a git command
 # that always succeeds.
-    COMMAND 
+    COMMAND
         cd
     COMMAND
         ${LLVM_MOS_GH} release delete ${LLVM_MOS_RELEASE_NAME} -y ||
-           echo "No previous release ${LLVM_MOS_RELEASE_NAME} to delete" 
+           echo "No previous release ${LLVM_MOS_RELEASE_NAME} to delete"
     COMMAND
         git push --delete origin ${LLVM_MOS_RELEASE_NAME} ||
             echo "No previous tag ${LLVM_MOS_RELEASE_NAME} to delete"
@@ -138,13 +138,13 @@ add_custom_target(ship
     COMMAND
         echo "Time: ${LLVM_MOS_DATE_TIME}" >> git.log
     COMMAND
-        ${LLVM_MOS_GH} release create 
-            ${LLVM_MOS_RELEASE_NAME} 
+        ${LLVM_MOS_GH} release create
+            ${LLVM_MOS_RELEASE_NAME}
             --notes-file git.log
             --title ${LLVM_MOS_RELEASE_NAME}
             --target ${LLVM_MOS_GIT_TAG}
             ${LLVM_MOS_GH_RELEASE_CREATE_FLAGS}
-            ${LLVM_MOS_PACKAGE_PATH} 
+            ${LLVM_MOS_PACKAGE_PATH}
     DEPENDS package
     WORKING_DIRECTORY ${LLVM_MOS_SOURCE_DIR}
     COMMENT Compressing release package ${LLVM_MOS_PACKAGE_PATH}
