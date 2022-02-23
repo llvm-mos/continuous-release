@@ -99,7 +99,7 @@ else()
   set(LLVM_MOS_PACKAGE_PATH
       ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.tar.xz)
   find_program(LLVM_MOS_TAR tar REQUIRED)
-  set(package_command ${LLVM_MOS_TAR} -cJvf ${LLVM_MOS_PACKAGE_PATH} ./)
+  set(package_command ${LLVM_MOS_TAR} -cJvf ${LLVM_MOS_PACKAGE_PATH} llvm-mos)
 endif()
 add_custom_target(package
     COMMAND ${CMAKE_COMMAND} -E copy ${LLVM_MOS_SOURCE_DIR}/llvm/LICENSE.TXT ${LLVM_MOS_INSTALL_DIR}
