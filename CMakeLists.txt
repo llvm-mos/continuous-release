@@ -102,6 +102,8 @@ else()
   set(package_command ${LLVM_MOS_TAR} -cJvf ${LLVM_MOS_PACKAGE_PATH} ./)
 endif()
 add_custom_target(package
+    COMMAND ${CMAKE_COMMAND} -E copy ${LLVM_MOS_SOURCE_DIR}/llvm/LICENSE.TXT ${LLVM_MOS_INSTALL_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${LLVM_MOS_SOURCE_DIR}/NOTICE ${LLVM_MOS_INSTALL_DIR}
     COMMAND ${package_command}
     WORKING_DIRECTORY ${LLVM_MOS_INSTALL_DIR}/..
     BYPRODUCTS ${LLVM_MOS_PACKAGE_PATH}
