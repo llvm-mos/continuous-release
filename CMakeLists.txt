@@ -92,9 +92,9 @@ set(LLVM_MOS_RELEASE_NAME llvm-mos-${LLVM_MOS_PLATFORM_NAME}-${LLVM_MOS_RELEASE_
 
 if (WIN32)
   set(LLVM_MOS_PACKAGE_PATH
-      ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.zip)
-  find_program(LLVM_MOS_ZIP zip REQUIRED)
-  set(package_command ${LLVM_MOS_ZIP} -FSr -9 -v ${LLVM_MOS_PACKAGE_PATH} ./)
+      ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.7z)
+  find_program(LLVM_MOS_7Z 7z REQUIRED)
+  set(package_command ${LLVM_MOS_7Z} 7z a ${LLVM_MOS_PACKAGE_PATH} llvm-mos)
 else()
   set(LLVM_MOS_PACKAGE_PATH
       ${LLVM_MOS_INSTALL_DIR}/../../${LLVM_MOS_RELEASE_NAME}.tar.xz)
